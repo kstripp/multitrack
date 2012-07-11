@@ -1,0 +1,49 @@
+#####################################################################
+# Setup
+#####################################################################
+cmake_minimum_required( VERSION 2.6 )
+project( multitrack )
+set (multitrack_VERSION_MAJOR 0)
+set (multitrack_VERSION_MINOR 0)
+set ( CMAKE_BUILD_TYPE Release )
+
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
+configure_file(
+	"${PROJECT_SOURCE_DIR}/config.h.in"
+    "${PROJECT_BINARY_DIR}/config.h"
+	)
+
+
+#####################################################################
+# Compiler flags
+#####################################################################
+add_definitions ( -Wall )
+
+#add_subdirectory(src)
+#add_subdirectory(src/sgp4sdp4)
+
+#####################################################################
+# Header files
+#####################################################################
+set (multitrack_HDRS ${multitrack_HDRS}
+	lib/sgp4sdp4/sgp4sdp4.h
+	)
+
+#####################################################################
+# Source files
+#####################################################################
+set (multitrack_SRCS ${multitrack_SRCS}
+	lib/main.c
+	lib/sgp4sdp4/sgp4sdp4.c
+	lib/sgp4sdp4/sgp_in.c
+	lib/sgp4sdp4/sgp_math.c
+	lib/sgp4sdp4/sgp_obs.c
+	lib/sgp4sdp4/sgp_time.c
+	lib/sgp4sdp4/solar.c
+	)
+
+#####################################################################
+# Compile and Link
+#####################################################################
+add_executable ( multitrack ${multitrack_SRCS} )
