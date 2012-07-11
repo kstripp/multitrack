@@ -1,0 +1,4 @@
+/* Configuration and settings for multitrack */
+
+#define multitrack_VERSION_MAJOR @multitrack_VERSION_MAJOR@
+#define multitrack_VERSION_MINOR @multitrack_VERSION_MINOR@
