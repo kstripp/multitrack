@@ -3,7 +3,7 @@
 SHELL = /bin/sh
 CC    = gcc -Wall -O2 -march=native
 
-objects = main.o sgp4sdp4.o sgp_in.o sgp_math.o sgp_obs.o sgp_time.o solar.o
+objects = example.o sgp4sdp4.o sgp_in.o sgp_math.o sgp_obs.o sgp_time.o solar.o
 
 kelso : $(objects)
 	$(CC) -lm -o ephem $(objects)
