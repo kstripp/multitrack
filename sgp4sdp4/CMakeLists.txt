@@ -1,4 +1,4 @@
-add_library( sgpsdp
+add_library( sgp4sdp4
 	sgp4sdp4.c
 	sgp_in.c
 	sgp_math.c

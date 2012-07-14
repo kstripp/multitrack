@@ -20,26 +20,31 @@ configure_file(
 #####################################################################
 add_definitions ( -Wall )
 
-include_directories ( ${CMAKE_SOURCE_DIR}/lib )
-add_subdirectory ( lib )
-set( LIBS ${LIBS} lib )
+#include_directories ( ${CMAKE_SOURCE_DIR}/lib )
+#add_subdirectory ( lib )
+#set( LIBS ${LIBS} lib )
+
+include_directories ( ${CMAKE_SOURCE_DIR}/sgp4sdp4 )
+add_subdirectory ( sgp4sdp4 )
+set( LIBS ${LIBS} sgp4sdp4 )
 
 include_directories ( ${CMAKE_SOURCE_DIR}/src )
 add_subdirectory ( src )
+set (multitrack_SRCS ${multitrack_SRCS} src )
 
 
 #####################################################################
 # Header files
 #####################################################################
 set (multitrack_HDRS ${multitrack_HDRS}
-	lib/sgp4sdp4/sgp4sdp4.h
+	sgp4sdp4/sgp4sdp4.h
 	)
 
 #####################################################################
 # Source files
 #####################################################################
 set (multitrack_SRCS ${multitrack_SRCS}
-	src/main.c
+#	src/main.c
 #	lib/sgp4sdp4/sgp4sdp4.c
 #	lib/sgp4sdp4/sgp_in.c
 #	lib/sgp4sdp4/sgp_math.c
@@ -53,3 +58,4 @@ set (multitrack_SRCS ${multitrack_SRCS}
 #####################################################################
 add_executable ( multitrack ${multitrack_SRCS} )
 target_link_libraries ( multitrack ${LIBS} ) 
+set_target_properties ( multitrack PROPERTIES LINKER_LANGUAGE C )
