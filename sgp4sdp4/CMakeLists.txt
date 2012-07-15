@@ -5,20 +5,29 @@
 #add_library( sgp_time sgp_time.c)
 #add_library( solar solar.c)
 
-#set( LIBS ${LIBS}
-#	sgp4sdp4
+set( LIBS ${LIBS}
+	sgp4sdp4
 #	sgp_in
 #	sgp_math
 #	sgp_obs
 #	sgp_time
 #	solar
+	)
+
+#set (multitrack_SRCS ${multitrack_SRCS}
+#	sgp4sdp4.c
+#	sgp_in.c
+#	sgp_math.c
+#	sgp_obs.c
+#	sgp_time.c
+#	solar.c
 #	)
 
-set (multitrack_SRCS ${multitrack_SRCS}
+add_library( sgp4sdp4 
 	sgp4sdp4.c
-	sgp_in.c
-	sgp_math.c
-	sgp_obs.c
-	sgp_time.c
-	solar.c
+	sgp_in sgp_in.c
+	sgp_math sgp_math.c
+	sgp_obs sgp_obs.c
+	sgp_time sgp_time.c
+	solar solar.c
 	)

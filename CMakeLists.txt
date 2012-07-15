@@ -18,36 +18,45 @@ configure_file(
 #####################################################################
 # Compiler flags
 #####################################################################
-add_definitions ( -Wall )
+add_definitions ( -Wall -march=native )
 
 #include_directories ( ${CMAKE_SOURCE_DIR}/lib )
 #add_subdirectory ( lib )
 #set( LIBS ${LIBS} lib )
 
-add_subdirectory ( sgp4sdp4 )
+include_directories ( ${PROJECT_SOURCE_DIR}/sgp4sdp4 )
+include_directories ( ${PROJECT_BINARY_DIR}/sgp4sdp4 )
+#add_subdirectory ( sgp4sdp4 )
 #set( LIBS ${LIBS} sgp4sdp4 )
 
-add_subdirectory ( src )
+include_directories ( ${CMAKE_SOURCE_DIR}/src )
+#add_subdirectory ( src )
 #set (multitrack_SRCS ${multitrack_SRCS} src )
 
 
 #####################################################################
 # Header files
 #####################################################################
-#set (multitrack_HDRS ${multitrack_HDRS}
-#	sgp4sdp4/sgp4sdp4.h
-#	)
+set (multitrack_HDRS ${multitrack_HDRS}
+	sgp4sdp4/sgp4sdp4.h
+	)
 
 #####################################################################
 # Source files
 #####################################################################
 set (multitrack_SRCS ${multitrack_SRCS}
-#	src/main.c
-#	lib/sgp4sdp4/sgp4sdp4.c
-#	lib/sgp4sdp4/sgp_in.c
-#	lib/sgp4sdp4/sgp_math.c
-#	lib/sgp4sdp4/sgp_obs.c
-#	lib/sgp4sdp4/sgp_time.c
-#	lib/sgp4sdp4/solar.c
+	src/main.c
+	sgp4sdp4/sgp4sdp4.c
+	sgp4sdp4/sgp_in.c
+	sgp4sdp4/sgp_math.c
+	sgp4sdp4/sgp_obs.c
+	sgp4sdp4/sgp_time.c
+	sgp4sdp4/solar.c
 	)
 
+#####################################################################
+# Compile and Link
+#####################################################################
+add_executable ( multitrack ${multitrack_SRCS} )
+#target_link_libraries ( multitrack ${LIBS} ) 
+#set_target_properties ( multitrack PROPERTIES LINKER_LANGUAGE C )
