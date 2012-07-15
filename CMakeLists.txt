@@ -32,6 +32,7 @@ include_directories ( ${PROJECT_BINARY_DIR}/sgp4sdp4 )
 include_directories ( ${CMAKE_SOURCE_DIR}/src )
 #add_subdirectory ( src )
 #set (multitrack_SRCS ${multitrack_SRCS} src )
+include_directories ( ${PROJECT_BINARY_DIR} )
 
 
 #####################################################################
