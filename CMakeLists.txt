@@ -24,21 +24,19 @@ add_definitions ( -Wall )
 #add_subdirectory ( lib )
 #set( LIBS ${LIBS} lib )
 
-include_directories ( ${CMAKE_SOURCE_DIR}/sgp4sdp4 )
 add_subdirectory ( sgp4sdp4 )
-set( LIBS ${LIBS} sgp4sdp4 )
+#set( LIBS ${LIBS} sgp4sdp4 )
 
-include_directories ( ${CMAKE_SOURCE_DIR}/src )
 add_subdirectory ( src )
-set (multitrack_SRCS ${multitrack_SRCS} src )
+#set (multitrack_SRCS ${multitrack_SRCS} src )
 
 
 #####################################################################
 # Header files
 #####################################################################
-set (multitrack_HDRS ${multitrack_HDRS}
-	sgp4sdp4/sgp4sdp4.h
-	)
+#set (multitrack_HDRS ${multitrack_HDRS}
+#	sgp4sdp4/sgp4sdp4.h
+#	)
 
 #####################################################################
 # Source files
@@ -53,9 +51,3 @@ set (multitrack_SRCS ${multitrack_SRCS}
 #	lib/sgp4sdp4/solar.c
 	)
 
-#####################################################################
-# Compile and Link
-#####################################################################
-add_executable ( multitrack ${multitrack_SRCS} )
-target_link_libraries ( multitrack ${LIBS} ) 
-set_target_properties ( multitrack PROPERTIES LINKER_LANGUAGE C )
