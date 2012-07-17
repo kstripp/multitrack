@@ -1,0 +1,22 @@
+#!/bin/bash
+
+DIR=~/.config/multitrack
+TLE=tlex_master.txt
+
+if [ -e $DIR/$TLE ]
+then
+	rm $DIR/$TLE.1
+	mv $DIR/$TLE $DIR/$TLE.1
+fi
+
+cd $DIR
+wget http://gs.engin.umich.edu/predictions/tlex_master.txt
+
+if [ -e $DIR/$TLE ]
+then
+	echo "Download successful"
+else
+	echo "Download unsuccessful, restoring old file"
+	mv $DIR/$TLE.1 $DIR/$TLE
+fi
+
