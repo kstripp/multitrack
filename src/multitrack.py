@@ -12,6 +12,7 @@ maxPasses = 10
 predictionURL = "http://gs.engin.umich.edu/predictions2/ANN_ARBOR/"
 aos_col = 0
 los_col = 2
+orbNum_col = 9
 numHours = 24		# interval that this script should be run
 startDelay = 5		# minutes before pass starts
 configDir = "~/.config/multitrack"
@@ -34,7 +35,9 @@ os.system("./tleupdate")
 time_t = time.time()
 tlocal = time.asctime()
 
-predictionURL=predictionURL+sats[0]
+# TODO: Loop through Satellites
+sat = sats[1]
+predictionURL=predictionURL+sat
 try:
 	pred = urllib2.urlopen(predictionURL)
 except urllib2.URLError:
@@ -47,12 +50,13 @@ except urllib2.HTTPError:
 	os.system("echo " + msg + " >> errlog.txt")
 	quit()
 
-# iterate passes in the next 12 hours
+# iterate passes in the next 24 hours
 numPasses = 0
 while numPasses < maxPasses:
 	satpass =  pred.readline().split('&')
 	passtime = time.strptime(satpass[aos_col] + " UTC", '%Y/%m/%d %H:%M:%S %Z')
 	lostime = time.strptime(satpass[los_col] + " UTC", '%Y/%m/%d %H:%M:%S %Z')
+	orbitNum = satpass[orbNum_col].split('\n')[0].split(' ')[1]
 
 	# Conver UTC time struct to UNIX
 	passtime = calendar.timegm(passtime)
@@ -61,20 +65,24 @@ while numPasses < maxPasses:
 	# Check that pass is within planned interval
 	if passtime > time_t + 60*60*numHours:
 		break
-	
-	print str(passtime) + ' ' + str(lostime)
+
+	# Call pass prediction
+	cmdString =  "multitrack -a " + str(passtime) + ' -l ' + str(lostime)
+	cmdString = cmdString + " -o " + configDir + "/" + orbitNum + "_AA_" + sat + ".txt"
+	print cmdString
 
 	# Convert UNIX time to local time struct
 	passtime = time.localtime(passtime)
 
 	# Build Command string
-	cmdString = configDir + "/restart_client.cron"
+	cmdString = "passTrack.py " + configDir + "/" + orbitNum + "_AA_" + sat + ".txt" 
 	timeStr = time.strftime('%R %D', passtime)
 	cmdString = 'echo "' + cmdString +  '" | at ' + timeStr
 
 	# Execute String
 	#os.system(cmdString)
 
+	print cmdString
 
 	numPasses += 1
 
