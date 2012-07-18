@@ -19,6 +19,7 @@
 /* Main program */
 int main( int argc, char **argv )
 {	
+	FILE * outFile = stdout; //Default output to terminal
 	int c = 0;
 	int unix_aos = 0; 
 	int unix_los = 0;
@@ -30,6 +31,7 @@ int main( int argc, char **argv )
  * -a, --aos-time,	UNIX time of AOS
  * -l, --los-time,	UNIX time of LOS
  * -s, --sat-id, 	NORAD Sat ID
+ * -o, --outfile, 	output file name
  ********************************************************************/
 
 	while(1)
@@ -43,12 +45,13 @@ int main( int argc, char **argv )
 			{"aos-time",	required_argument,	0, 'a'},
 			{"los-time",	required_argument,	0, 'l'},
 //			{"sat-id",		required_argument,	0, 's'},
+			{"outfile",		no_argument,	0, 'o'},
 			{0,0,0,0}
 		};
 
 		int opt_index = 0;		//should this really be inside the loop?
 
-		c = getopt_long(argc, argv, "a:l:s:", long_options, &opt_index);
+		c = getopt_long(argc, argv, "a:l:s:o:", long_options, &opt_index);
 
 		/* Detect end of options */
 		if( c== -1)
@@ -73,6 +76,10 @@ int main( int argc, char **argv )
 				unix_los = atoi(optarg);
 				break;
 
+			case 'o':
+				outFile = fopen(optarg, "w");
+				break;
+			
 			case '?':
 				/* supposedly an error message has been printed */
 				break;
@@ -189,6 +196,9 @@ int main( int argc, char **argv )
 	{
 		t_index = unix_aos;
 	}
+	
+	/* Print file header */
+	fprintf(outFile, "Timestamp azimuth elevation range rate\n");
 
 	do  /* Loop */
 	{
@@ -282,7 +292,7 @@ int main( int argc, char **argv )
 */
 //		sleep(1);
 
-		printf("%i %f %f\n", t_index, sat_azi, sat_ele);
+		fprintf(outFile, "%i %f %f %f\n", t_index, sat_azi, sat_ele, sat_range_rate);
 		
 
 		/* Increment the time between AOS and LOS. */
@@ -290,7 +300,8 @@ int main( int argc, char **argv )
 
 	}  /* End of do */
 	while ( t_index < unix_los );
-
+	fclose(outFile);
+	
 	return(0);
 } /* End of main() */
 
