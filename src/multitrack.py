@@ -19,10 +19,16 @@ configDir = "~/.config/multitrack"
 #######################################
 
 # TODO: add check for config file, if it doesn't exist create one from the sample
+if os.path.exists(configDir + "/multitrack.conf"):
+	print "Using config file " + configDir + "/multitrack.conf"
+else:
+	print "Copying example config file to " + configDir
+	os.system("cp /usr/local/etc/multitrack/multitrack.conf " + configDir)
 
 # Read in satellites to track
 conf = ConfigParser.ConfigParser()
 conf.read(configDir + "/multitrack.conf")
+print conf.sections()
 satSet = conf.items("Sats")
 
 sats = []
