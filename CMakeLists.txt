@@ -2,11 +2,11 @@
 # Setup
 #####################################################################
 cmake_minimum_required (VERSION 2.6)
-project ( multitrack )
+project ( satpredict )
 
 # Project Version
-set (multitrack_VERSION_MAJOR 0)
-set (multitrack_VERSION_MINOR 0)
+set (satpredict_VERSION_MAJOR 0)
+set (satpredict_VERSION_MINOR 0)
 
 # Configuration file
 configure_file(
@@ -55,15 +55,24 @@ set (HDRS ${HDRS}
 	)
 
 #####################################################################
+# Scripts
+#####################################################################
+set (SCRIPTS ${SCRIPTS}
+	src/multitrack.py
+	src/updatetle
+	)
+
+#####################################################################
 # Compile and Link
 #####################################################################
-add_executable ( multitrack ${SRCS} )
-target_link_libraries ( multitrack ${LIBS} )
+add_executable ( satpredict ${SRCS} )
+target_link_libraries ( satpredict ${LIBS} )
 
 #####################################################################
 # Install
 #####################################################################
-install ( TARGETS multitrack DESTINATION bin )
+install ( TARGETS satpredict DESTINATION bin )
+install ( PROGRAMS ${SCRIPTS} DESTINATION bin )
 
 # Create uninstall target
 configure_file(
