@@ -59,11 +59,11 @@ for sat in sats:
 	except urllib2.URLError:
 		msg = tlocal + ": URL Error, passes not scheduled"
 		print msg
-		os.system("echo " + msg + " >> errlog.txt")
+		os.system("echo " + msg + " >> " + configDir + "/errlog.txt")
 		quit()
 	except urllib2.HTTPError:
 		msg = str(tlocal) + ": HTTP Error, passes not scheduled"
-		os.system("echo " + msg + " >> errlog.txt")
+		os.system("echo " + msg + " >> " + configDir + "/errlog.txt")
 		quit()
 
 	# iterate passes in the next 24 hours
