@@ -18,17 +18,19 @@ startDelay = 5		# minutes before pass starts
 configDir = "~/.config/multitrack"
 #######################################
 
+# TODO: add check for config file, if it doesn't exist create one from the sample
+
 # Read in satellites to track
 conf = ConfigParser.ConfigParser()
-conf.read("multitrack.conf")
-satSet =  conf.items("Sats")
+conf.read(configDir + "/multitrack.conf")
+satSet = conf.items("Sats")
 
 sats = []
 for pair in satSet:
 	sats.append(str.upper(pair[0]))
 
 # Fetch and parse TLE File
-os.system("./tleupdate")
+os.system("tleupdate -d " + configDir)
 
 
 # Set up time variables
