@@ -59,7 +59,14 @@ set (HDRS ${HDRS}
 #####################################################################
 set (SCRIPTS ${SCRIPTS}
 	src/multitrack.py
-	src/updatetle
+	src/tleupdate
+	)
+
+#####################################################################
+# Scripts
+#####################################################################
+set (CONFIG ${CONFIG}
+	src/multitrack.conf
 	)
 
 #####################################################################
@@ -73,6 +80,7 @@ target_link_libraries ( satpredict ${LIBS} )
 #####################################################################
 install ( TARGETS satpredict DESTINATION bin )
 install ( PROGRAMS ${SCRIPTS} DESTINATION bin )
+install ( FILES ${CONFIG} DESTINATION etc/multitrack )
 
 # Create uninstall target
 configure_file(
