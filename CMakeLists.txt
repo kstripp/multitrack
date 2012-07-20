@@ -58,7 +58,7 @@ set (HDRS ${HDRS}
 # Scripts
 #####################################################################
 set (SCRIPTS ${SCRIPTS}
-	src/multitrack.py
+	src/multitrack
 	src/tleupdate
 	)
 
