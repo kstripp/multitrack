@@ -1,6 +1,30 @@
 #!/bin/bash
 
-DIR=~/.config/multitrack
+# tleupdate
+# K. Scott Tripp <ktripp@umich.edu>
+# 19 July 2012
+
+# See if a directory is passed to the script
+while getopts ":d:" opt; do
+	case $opt in
+		d)
+			DIR=$OPTARG
+			;;
+		\?)
+			echo "Invalid option -$OPTARG" >&2
+			;;
+		:)
+			echo "Option $OPTARG requires an argument" >&2
+			;;
+	esac
+done
+
+# for compatibility with older version of script
+if [ -z $DIR ];
+then
+	DIR=~/Data/TLE
+fi
+
 TLE=tlex_master.txt
 
 if [ -e $DIR/$TLE ]
@@ -19,4 +43,3 @@ else
 	echo "Download unsuccessful, restoring old file"
 	mv $DIR/$TLE.1 $DIR/$TLE
 fi
-
