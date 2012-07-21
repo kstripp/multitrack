@@ -80,7 +80,7 @@ target_link_libraries ( satpredict ${LIBS} )
 #####################################################################
 install ( TARGETS satpredict DESTINATION bin )
 install ( PROGRAMS ${SCRIPTS} DESTINATION bin )
-install ( FILES ${CONFIG} DESTINATION etc/multitrack )
+install ( FILES ${CONFIG} DESTINATION share/multitrack )
 
 # Create uninstall target
 configure_file(

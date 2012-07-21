@@ -26,11 +26,11 @@ if os.path.exists(configDir + "/multitrack.conf"):
 else:
 	if os.path.exists(configDir + "/multitrack"):
 		print "Copying example config file to " + configDir
-		os.system("cp /usr/local/etc/multitrack/multitrack.conf " + configDir)
+		os.system("cp /usr/local/share/multitrack/multitrack.conf " + configDir)
 	else:
 		os.system("mkdir " + configDir)
 		print "Copying example config file to " + configDir
-		os.system("cp /usr/local/etc/multitrack/multitrack.conf " + configDir)
+		os.system("cp /usr/local/share/multitrack/multitrack.conf " + configDir)
 
 
 # Read in satellites to track
