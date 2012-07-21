@@ -180,7 +180,10 @@ Input_Tle_Set( char *tle_file, tle_t *tle)
 
   /* Open TLE file, abort on failure */
   if( (fp = fopen( tle_file, "r")) == NULL )
+  {
+    perror("Something went horribly wrong");
 	return(-1);
+  }
 
   /* Read the satellite's name */
   idx = 0;
@@ -206,7 +209,10 @@ Input_Tle_Set( char *tle_file, tle_t *tle)
 
   /* Check TLE set and abort if not valid */
   if( !Good_Elements(tle_set) )
+  { 
+	printf("Something seems to be wrong with the element set\n");
 	return(-2);
+  }
 
   /* Convert the TLE set to orbital elements */
   Convert_Satellite_Data( tle_set, tle );
