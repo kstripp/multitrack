@@ -1,17 +1,24 @@
-/*
- *  main.c          April 10  2001
- *
- *  A skeleton main() function to demonstrate the use of
- *  the SGP4() and SDP4() routines in the sgp4sdp4.c file.
- *  The TLE set to be used is read from the file amateur.txt
- *  downloaded from Dr Kelso's website at www.celestrak.com.
- *  Please note that this is a simple application and can only
- *  read the first TLE kep set, including line 0 with the Name.
- *
- *  July 3 2012
- *  Modified to accept unix time as an input
- *  K. Scott Tripp <ktripp@umich.edu>
- */
+/***************************************************************************
+ * This file is part of Multitrack.                                        *
+ *                                                                         *
+ * Copyright (C) 2012 K. Scott Tripp                                       *
+ *                                                                         *
+ * AUTHORS:	K. Scott Tripp, <kscott.tripp@gmail.com>                       *
+ * 			Neoklis Kyriazis, 5B4AZ                                        *
+ *                                                                         *
+ * Multitrack is free software: you can redistribute it and/or modify      *
+ * it under the terms of the GNU General Public License as published by    *
+ * the Free Software Foundation, either version 3 of the License, or       *
+ * (at your option) any later version.                                     *
+ *                                                                         *
+ * Multitrack is distributed in the hope that it will be useful,           *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of          *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
+ * GNU General Public License for more details.                            *
+ *                                                                         *
+ * You should have received a copy of the GNU General Public License       *
+ * along with Multitrack.  If not, see <http://www.gnu.org/licenses/>.     *
+ ***************************************************************************/
 
 #include <getopt.h>
 #include "sgp4sdp4.h"
@@ -27,11 +34,11 @@ int main( int argc, char **argv )
 	static int verbose_flag;
 
 /********************************************************************
- * Command line arguments
- * -a, --aos-time,	UNIX time of AOS
- * -l, --los-time,	UNIX time of LOS
- * -s, --sat-id, 	NORAD Sat ID
- * -o, --outfile, 	output file name
+ * Command line arguments                                           *
+ * -a, --aos-time,	UNIX time of AOS                                *
+ * -l, --los-time,	UNIX time of LOS                                *
+ * -s, --sat-id, 	NORAD Sat ID                                    *
+ * -o, --outfile, 	output file name                                *
  ********************************************************************/
 
 	while(1)

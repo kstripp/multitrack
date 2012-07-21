@@ -1,0 +1,9 @@
+Multitrack is designed and developed by K. Scott Tripp, 
+with notable contributions from others.
+
+Contributors
+- Dr. T.S. Kelso, the author original SGP4/SDP4 algorithms in FORTRAN and Pascal. 
+- Neoklis Kyriazis, 5B4AZ, conversion of the algorithms to C.
+
+If you notice that your work has been used in one way or other without giving
+you the proper credits, contact K. Scott Tripp <kscott.tripp@gmail.com>

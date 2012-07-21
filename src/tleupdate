@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # tleupdate
-# K. Scott Tripp <ktripp@umich.edu>
+# K. Scott Tripp <kscott.tripp@gmail.com>
 # 19 July 2012
 
 # See if a directory is passed to the script
