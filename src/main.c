@@ -32,6 +32,12 @@ int main( int argc, char **argv )
 	int unix_los = 0;
 	int t_index = 0;
 	static int verbose_flag;
+	
+	/* Default TLE source file */
+	//TODO: remove dependency on having a single TLE in the file
+	//TODO: make the file an option
+	// The Satellite Name in a TLE can have up to 24 characters
+	char tle_file[30] = "./rax.txt";
 
 /********************************************************************
  * Command line arguments                                           *
@@ -39,6 +45,7 @@ int main( int argc, char **argv )
  * -l, --los-time,	UNIX time of LOS                                *
  * -s, --sat-id, 	NORAD Sat ID                                    *
  * -o, --outfile, 	output file name                                *
+ * -t, --tle-file, 	TLE file name  	                                *
  ********************************************************************/
 
 	while(1)
@@ -53,12 +60,13 @@ int main( int argc, char **argv )
 			{"los-time",	required_argument,	0, 'l'},
 //			{"sat-id",		required_argument,	0, 's'},
 			{"outfile",		no_argument,	0, 'o'},
+			{"tle-file",	no_argument,	0, 't'},
 			{0,0,0,0}
 		};
 
 		int opt_index = 0;		//should this really be inside the loop?
 
-		c = getopt_long(argc, argv, "a:l:s:o:", long_options, &opt_index);
+		c = getopt_long(argc, argv, "a:l:s:o:t:", long_options, &opt_index);
 
 		/* Detect end of options */
 		if( c== -1)
@@ -87,6 +95,11 @@ int main( int argc, char **argv )
 				outFile = fopen(optarg, "w");
 				break;
 			
+			case 't':
+				// FIXME this may not be robust
+				strcpy(tle_file, optarg);
+				break;
+
 			case '?':
 				/* supposedly an error message has been printed */
 				break;
@@ -95,11 +108,6 @@ int main( int argc, char **argv )
 				abort ();
 		}
 	}
-
-	/* TLE source file */
-	//TODO: remove dependency on having a single TLE in the file
-	//TODO: make the file an option
-	char tle_file[] = "./rax.txt";
 
 	/* Observer's geodetic co-ordinates.      */
 	/* Lat North, Lon East in rads, Alt in km */
@@ -151,6 +159,8 @@ int main( int argc, char **argv )
 
 	/* Input one (first!) TLE set from file */
 	flg = Input_Tle_Set(tle_file, &tle);
+
+	printf("%s\n", tle_file);
 
 	/* Abort if file open fails */
 	if( flg == -1 )

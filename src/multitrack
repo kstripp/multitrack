@@ -60,10 +60,8 @@ conf = ConfigParser.ConfigParser()
 conf.read(configDir + "/multitrack.conf")
 print conf.sections()
 satSet = conf.items("Sats")
-# FIXME: some TLEs have a slightly different prediction URL name:
-# ex: M-CUBED/EXP-1 vs M-CUBED_EXP-1
 
-# Based on TLE name
+# Create Satellite ID arrays
 sats = []
 satIDs = []
 for index in range(0,len(satSet)):
@@ -134,6 +132,7 @@ for sat in sats:
 		# Call pass prediction
 		cmdString =  "satpredict -a " + str(passtime) + ' -l ' + str(lostime)
 		cmdString = cmdString + " -o " + configDir + "/" + orbitNum + "_AA_" + sat + ".txt"
+		cmdString = cmdString + " -t " + configDir + "/" + sat + ".txt"
 		print cmdString
 
 		# Convert UNIX time to local time struct
