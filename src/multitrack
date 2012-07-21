@@ -38,6 +38,8 @@ conf = ConfigParser.ConfigParser()
 conf.read(configDir + "/multitrack.conf")
 print conf.sections()
 satSet = conf.items("Sats")
+# FIXME: some TLEs have a slightly different prediction URL name:
+# ex: M-CUBED/EXP-1 vs M-CUBED_EXP-1
 
 sats = []
 for pair in satSet:
@@ -46,6 +48,19 @@ for pair in satSet:
 # Fetch and parse TLE File
 os.system("tleupdate -d " + configDir)
 
+for sat in sats:
+	tleMaster = open(configDir + "/" + conf.get("TLE", "tle"), "r")
+	tleSingle = open(configDir + "/" + sat + ".txt", "w")
+
+	while True:
+		line = tleMaster.readline()
+		if line == (sat + "\n"):
+			tleSingle.write(line)
+			tleSingle.write(tleMaster.readline())
+			tleSingle.write(tleMaster.readline())
+			break
+		if len(line) == 0:
+			break
 
 # Set up time variables
 time_t = time.time()
