@@ -36,8 +36,7 @@ int main( int argc, char **argv )
 	/* Default TLE source file */
 	//TODO: remove dependency on having a single TLE in the file
 	//TODO: make the file an option
-	// The Satellite Name in a TLE can have up to 24 characters
-	char tle_file[30] = "./rax.txt";
+	char tle_file[255] = "./rax.txt";
 
 /********************************************************************
  * Command line arguments                                           *
@@ -97,7 +96,7 @@ int main( int argc, char **argv )
 			
 			case 't':
 				// FIXME this may not be robust
-				strcpy(tle_file, optarg);
+				sprintf(tle_file, "%s", optarg);
 				break;
 
 			case '?':
@@ -165,7 +164,7 @@ int main( int argc, char **argv )
 	/* Abort if file open fails */
 	if( flg == -1 )
 	{
-		printf(" File open failed - Exiting!\n");
+		printf(" TLE file open failed - Exiting!\n");
 		exit(-1);
 	}
 
@@ -309,7 +308,8 @@ int main( int argc, char **argv )
 */
 //		sleep(1);
 
-		fprintf(outFile, "%i %f %f %f\n", t_index, sat_azi, sat_ele, sat_range_rate);
+		fprintf(outFile, "%i %f %f %f\n", 
+				t_index, sat_azi, sat_ele, sat_range_rate);
 		
 
 		/* Increment the time between AOS and LOS. */
