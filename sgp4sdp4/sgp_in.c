@@ -187,10 +187,10 @@ Input_Tle_Set( char *tle_file, tle_t *tle)
 
   /* Read the satellite's name */
   idx = 0;
-  while( ((chr = fgetc(fp)) != ' ') && (chr != CR) && (chr != LF) )
+  while( ((chr = fgetc(fp)) != '\0') && (chr != CR) && (chr != LF) )
 	tle->sat_name[idx++] = chr;
   /* Dump trailing spaces and CR/LF, put back last character */
-  while( ((chr = fgetc(fp)) == ' ') || (chr == CR) || (chr == LF) );
+  while( ((chr = fgetc(fp)) == '\0') || (chr == CR) || (chr == LF) );
   ungetc(chr,fp);
   tle->sat_name[idx] = '\0';
 
