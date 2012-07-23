@@ -26,17 +26,62 @@
 # antenna controller and tranceiver.
 
 from optparse import OptionParser
-import sys
+import sys, os, time
 
 # Set up command line options and arguments
-parser = OptionParser()
+usage = "Usage: %prog [options] FILE\n\na FILE argument containing"
+usage += " timestamps, azimuth, elevation, and range rate"
+usage += " for a satellite pass"
+parser = OptionParser(usage=usage)
+
 parser.add_option("-s", "--host", dest="host", default="localhost",
 		help="Hostname or IP address for hamlib server")
+parser.add_option("--delete", 
+		action="store_true", dest="deleteFlag", default=False,
+		help="Delete the pass file after use")
 (options, args) = parser.parse_args()
 
 if len(args) == 0:
-	print sys.argv[0] + " must be called with at least one file name"
+	print sys.argv[0] + " must be called with one file name"
 	quit()
 
-passFile = args[0]
+if len(args) > 1:
+	print "Error: too many arguments"
+	quit()
 
+# Pass File Column Configuration
+timeCol = 0
+azCol = 1
+elCol = 2
+rateCol = 3
+
+
+### Read in pass data ######################################################
+passFile = open(args[0], 'r')
+passFile.readline() #discard header
+
+timestamps = []
+azimuth = []
+elevation = []
+range_rate = []
+for line in passFile:
+	waypoint = line.split(' ')
+	timestamps.append(int(waypoint[timeCol]))
+	azimuth.append(float(waypoint[azCol]))
+	elevation.append(float(waypoint[elCol]))
+	range_rate.append(float(waypoint[rateCol].split('\n')[0]))
+
+# Delete old pass file
+if options.deleteFlag:
+	os.remove(args[0])
+	print "Deleted " + args[0]
+
+### Loop through pass based on timestamps ##################################
+time_t = time.time()
+
+for tIndex in range(0, len(timestamps)):
+
+	if time_t > timestamps[tIndex]:
+		print "yup"
+
+# after loop, park antennas
