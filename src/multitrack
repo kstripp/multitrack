@@ -133,8 +133,8 @@ for sat in sats:
 		cmdString =  "satpredict -a " + str(passtime) + ' -l ' + str(lostime)
 		cmdString = cmdString + " -o " + configDir + "/" + orbitNum + "_AA_" + sat + ".txt"
 		cmdString = cmdString + " -t " + configDir + "/" + sat + ".txt"
-		#os.system(cmdString)
-		print cmdString
+		#print cmdString
+		os.system(cmdString)
 
 		# Convert UNIX time to local time struct
 		passtime = time.localtime(passtime)
