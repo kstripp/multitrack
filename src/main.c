@@ -95,7 +95,6 @@ int main( int argc, char **argv )
 				break;
 			
 			case 't':
-				// FIXME this may not be robust
 				sprintf(tle_file, "%s", optarg);
 				break;
 
