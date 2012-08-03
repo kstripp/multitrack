@@ -105,21 +105,35 @@ rotator.connect((options.host, int(options.rot_port)))
 # Slew antennes before pass starts
 # TODO: adjust the file so that the azimuth tracks below horizon
 if maxAz <= azimuth[0]:
-	rotator.send("P " + str(int(azimuth[0]-360)) + "000")
+	rotator.send("P " + str(int(azimuth[0]-360)) + " 000")
+	print "P " + str(int(azimuth[0]-360)) + " 000"
 else:
-	rotator.send("P " + str(int(azimuth[0])) + "000")
+	rotator.send("P " + str(int(azimuth[0])) + " 000")
+	print "P " + str(int(azimuth[0])) + " 000"
 
 tIndex = 0
 while tIndex < len(timestamps):
 
-	if time_t > timestamps[tIndex]:
-		rotator.send("P " + str(int(azimuth[tIndex])) + ' ' + 
-							str(int(elevation[tIndex])))
+	if time_t >= timestamps[tIndex]:
+		
+		if azimuth[tIndex] <= maxAz:
+			setAz = str(int(azimuth[tIndex]))
+		else:
+			setAZ = str(int(azimuth[tIndex]-360))
+		rotString = "P " + setAz + ' ' + str(int(elevation[tIndex]))
+
+		print rotString
+		rotator.send(rotString)
 		tIndex+=1
 	
 	time.sleep(0.2)
+	time_t = time.time()
+	print timestamps[tIndex]
 
 # after loop, park antennas
 time.sleep(120)
-rotator.send("P 270 000")
+if 270 > maxAz:
+	rotator.send("P -090 000")
+else:
+	rotator.send("P 270 000")
 rotator.close()
