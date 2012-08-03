@@ -26,7 +26,23 @@
 # antenna controller and tranceiver.
 
 from optparse import OptionParser
-import sys, os, time
+import ConfigParser
+import sys, os, time, socket
+
+### Parameters #############################################################
+configDir = ".config/multitrack"
+############################################################################
+
+# Rotator Parameters
+# This assumes that the config file exists, which *should* be reasonable
+# as the multitrack main file should have already made it.
+configDir = os.getenv("HOME") + "/" + configDir
+conf = ConfigParser.ConfigParser()
+conf.read(configDir + "/multitrack.conf")
+minAz = float(conf.get("Rotator", "minAz"))
+maxAz = float(conf.get("Rotator", "maxAz"))
+minEl = float(conf.get("Rotator", "minEl"))
+maxEl = float(conf.get("Rotator", "maxEl"))
 
 # Set up command line options and arguments
 usage = "Usage: %prog [options] FILE\n\na FILE argument containing"
@@ -36,6 +52,8 @@ parser = OptionParser(usage=usage)
 
 parser.add_option("-s", "--host", dest="host", default="localhost",
 		help="Hostname or IP address for hamlib server")
+parser.add_option("--rot-port", dest="rot_port", default="4533",
+		help="Port number that rotctl is listening on")
 parser.add_option("--delete", 
 		action="store_true", dest="deleteFlag", default=False,
 		help="Delete the pass file after use")
@@ -79,9 +97,29 @@ if options.deleteFlag:
 ### Loop through pass based on timestamps ##################################
 time_t = time.time()
 
-for tIndex in range(0, len(timestamps)):
+# Set up Socket
+BUFFER_SIZE = 256
+rotator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+rotator.connect((options.host, int(options.rot_port)))
+
+# Slew antennes before pass starts
+# TODO: adjust the file so that the azimuth tracks below horizon
+if maxAz <= azimuth[0]:
+	rotator.send("P " + str(int(azimuth[0]-360)) + "000")
+else:
+	rotator.send("P " + str(int(azimuth[0])) + "000")
+
+tIndex = 0
+while tIndex < len(timestamps):
 
 	if time_t > timestamps[tIndex]:
-		print "yup"
+		rotator.send("P " + str(int(azimuth[tIndex])) + ' ' + 
+							str(int(elevation[tIndex])))
+		tIndex+=1
+	
+	time.sleep(0.2)
 
 # after loop, park antennas
+time.sleep(120)
+rotator.send("P 270 000")
+rotator.close()
