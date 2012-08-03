@@ -146,7 +146,7 @@ for sat in sats:
 
 		# Execute String
 		#os.system(cmdString)
-		#print cmdString
+		print cmdString
 
 		numPasses += 1
 
