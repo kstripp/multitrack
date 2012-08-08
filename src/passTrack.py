@@ -114,19 +114,25 @@ else:
 tIndex = 0
 while tIndex < len(timestamps):
 
-	if time_t >= timestamps[tIndex]:
+	if time_t <- timestamps[tIndex+1]:
+		tIndex+=1
+
+	elif time_t >= timestamps[tIndex]:
 		
 		if azimuth[tIndex] <= maxAz:
 			setAz = str(int(azimuth[tIndex]))
 		else:
 			setAZ = str(int(azimuth[tIndex]-360))
-		rotString = "P " + setAz + ' ' + str(int(elevation[tIndex]))
+
+		setAz = setAz.zfill(3)
+		setEl = str(int(elevation[tIndex])).zfill(3)
+		rotString = "P " + setAz + ' ' + setEl
 
 		print rotString
 		rotator.send(rotString)
 		tIndex+=1
 	
-	time.sleep(0.2)
+	time.sleep(0.5)
 	time_t = time.time()
 	print timestamps[tIndex]
 
