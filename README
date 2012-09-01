@@ -1,6 +1,9 @@
 Multitrack Ground Station Automation
 =============================
 
+Multitrack is designed to be a light weight, modular ground station
+control system.  It is not particularly full featured, as it
+is intended to allow unattended tracking of multiple satellites.
 
 Installation
 =============================
@@ -9,6 +12,15 @@ Installation
 Usage
 =============================
 
+
+TODO
+=============================
+Minor Version:
+* Use QTH files to govern ground station information
+* Add uplink frequency offset control
+
+Major Version:
+* Migrate multitrack into daemon style operation
 
 Credits and License
 =============================
