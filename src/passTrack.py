@@ -111,9 +111,11 @@ else:
 	rotator.send("P " + str(int(azimuth[0])) + " 000")
 	print "P " + str(int(azimuth[0])) + " 000"
 
+# Loop through timestamps in pass
 tIndex = 0
-while tIndex < len(timestamps):
+while tIndex < len(timestamps)-1:
 
+	# Fast forward if pass has already started
 	if time_t <- timestamps[tIndex+1]:
 		tIndex+=1
 
@@ -135,6 +137,7 @@ while tIndex < len(timestamps):
 	time.sleep(0.5)
 	time_t = time.time()
 	print timestamps[tIndex]
+	print time_t
 
 # after loop, park antennas
 time.sleep(120)
