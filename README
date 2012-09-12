@@ -18,6 +18,7 @@ TODO
 Minor Version:
 * Use QTH files to govern ground station information
 * Add uplink frequency offset control
+* Add pointing error envelop (should be in station info config file like qth)
 
 Major Version:
 * Migrate multitrack into daemon style operation
