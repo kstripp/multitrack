@@ -54,9 +54,13 @@ parser.add_option("-s", "--host", dest="host", default="localhost",
 		help="Hostname or IP address for hamlib server")
 parser.add_option("--rot-port", dest="rot_port", default="4533",
 		help="Port number that rotctl is listening on")
+parser.add_option("--rig-port", dest="rig_port", default="4532",
+		help="Port number that rigctl is listening on")
 parser.add_option("--delete", 
 		action="store_true", dest="deleteFlag", default=False,
 		help="Delete the pass file after use")
+parser.add_option("-d", "--downlink", dest="down_freq",
+		help="Downlink frequency in Hz")
 (options, args) = parser.parse_args()
 
 if len(args) == 0:
@@ -73,6 +77,8 @@ azCol = 1
 elCol = 2
 rateCol = 3
 
+### Constants ##############################################################
+speed_C = 3e8			# m/s.  You better know what this is.
 
 ### Read in pass data ######################################################
 passFile = open(args[0], 'r')
@@ -94,13 +100,15 @@ if options.deleteFlag:
 	os.remove(args[0])
 	print "Deleted " + args[0]
 
-### Loop through pass based on timestamps ##################################
-time_t = time.time()
-
-# Set up Socket
+### Connect to hardware ####################################################
 BUFFER_SIZE = 256
 rotator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 rotator.connect((options.host, int(options.rot_port)))
+radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+radio.connect((options.host, int(options.rig_port)))
+
+### Loop through pass based on timestamps ##################################
+time_t = time.time()
 
 # Slew antennes before pass starts
 # TODO: adjust the file so that the azimuth tracks below horizon
@@ -121,6 +129,7 @@ while tIndex < len(timestamps)-1:
 
 	elif time_t >= timestamps[tIndex]:
 		
+		# Build rotator command string
 		if azimuth[tIndex] <= maxAz:
 			setAz = str(int(azimuth[tIndex]))
 		else:
@@ -128,16 +137,29 @@ while tIndex < len(timestamps)-1:
 
 		setAz = setAz.zfill(3)
 		setEl = str(int(elevation[tIndex])).zfill(3)
-		rotString = "P " + setAz + ' ' + setEl
+		rotString = "P " + setAz + ' ' + setEl + "\r"
 
-		print rotString
+		#print rotString
 		rotator.send(rotString)
+		
+		# Calculate downlink Doppler and build radio command string
+		if options.down_freq is not None:
+			f_down = (1-range_rate[tIndex]*1000/speed_C)*int(options.down_freq)
+
+			rigString = "F " + str(int(f_down)) + "\r"
+			#print rigString
+			radio.send(rigString)
+
+		# TODO: add offset/repeater frequency
+		# for uplink Doppler correction
+
+		# Increment time
 		tIndex+=1
 	
 	time.sleep(0.5)
 	time_t = time.time()
-	print timestamps[tIndex]
-	print time_t
+	#print timestamps[tIndex]
+	#print time_t
 
 # after loop, park antennas
 time.sleep(120)
@@ -146,3 +168,4 @@ if 270 > maxAz:
 else:
 	rotator.send("P 270 000")
 rotator.close()
+radio.close()
