@@ -31,6 +31,7 @@ int main( int argc, char **argv )
 	int unix_aos = 0; 
 	int unix_los = 0;
 	int t_index = 0;
+	int header_flag = 1;
 	static int verbose_flag;
 	
 	/* Default TLE source file */
@@ -45,6 +46,7 @@ int main( int argc, char **argv )
  * -s, --sat-id, 	NORAD Sat ID                                    *
  * -o, --outfile, 	output file name                                *
  * -t, --tle-file, 	TLE file name  	                                *
+ * -n, --no-header,	Do not print header								*
  ********************************************************************/
 
 	while(1)
@@ -54,6 +56,7 @@ int main( int argc, char **argv )
 			/* Flag options */
 			{"verbose",		no_argument,	&verbose_flag, 1},
 			{"brief",		no_argument,	&verbose_flag, 0},
+			{"no-header",	no_argument,	0, 'n'},
 			/* Non-flag options */
 			{"aos-time",	required_argument,	0, 'a'},
 			{"los-time",	required_argument,	0, 'l'},
@@ -65,7 +68,7 @@ int main( int argc, char **argv )
 
 		int opt_index = 0;		//should this really be inside the loop?
 
-		c = getopt_long(argc, argv, "a:l:s:o:t:", long_options, &opt_index);
+		c = getopt_long(argc, argv, "na:l:s:o:t:", long_options, &opt_index);
 
 		/* Detect end of options */
 		if( c== -1)
@@ -80,6 +83,10 @@ int main( int argc, char **argv )
 				if(optarg)
 					printf(" with arg %s", optarg);
 				printf("\n");
+				break;
+			
+			case 'n':
+				header_flag = 0;
 				break;
 
 			case 'a':
@@ -158,7 +165,7 @@ int main( int argc, char **argv )
 	/* Input one (first!) TLE set from file */
 	flg = Input_Tle_Set(tle_file, &tle);
 
-	printf("%s\n", tle_file);
+	//printf("%s\n", tle_file);
 
 	/* Abort if file open fails */
 	if( flg == -1 )
@@ -213,7 +220,10 @@ int main( int argc, char **argv )
 	}
 	
 	/* Print file header */
-	fprintf(outFile, "Timestamp azimuth elevation range rate\n");
+	if (header_flag)
+	{
+		fprintf(outFile, "Timestamp azimuth elevation range rate\n");
+	}
 
 	do  /* Loop */
 	{
