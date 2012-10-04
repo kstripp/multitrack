@@ -29,143 +29,150 @@ from optparse import OptionParser
 import ConfigParser
 import sys, os, time, socket
 
-### Parameters #############################################################
-configDir = ".config/multitrack"
-############################################################################
+def track_pass(options, args):
+	### Parameters #############################################################
+	configDir = ".config/multitrack"
+	############################################################################
 
-# Rotator Parameters
-# This assumes that the config file exists, which *should* be reasonable
-# as the multitrack main file should have already made it.
-configDir = os.getenv("HOME") + "/" + configDir
-conf = ConfigParser.ConfigParser()
-conf.read(configDir + "/multitrack.conf")
-minAz = float(conf.get("Rotator", "minAz"))
-maxAz = float(conf.get("Rotator", "maxAz"))
-minEl = float(conf.get("Rotator", "minEl"))
-maxEl = float(conf.get("Rotator", "maxEl"))
+	# Rotator Parameters
+	# This assumes that the config file exists, which *should* be reasonable
+	# as the multitrack main file should have already made it.
+	configDir = os.getenv("HOME") + "/" + configDir
+	conf = ConfigParser.ConfigParser()
+	conf.read(configDir + "/multitrack.conf")
+	minAz = float(conf.get("Rotator", "minAz"))
+	maxAz = float(conf.get("Rotator", "maxAz"))
+	minEl = float(conf.get("Rotator", "minEl"))
+	maxEl = float(conf.get("Rotator", "maxEl"))
 
-# Set up command line options and arguments
-usage = "Usage: %prog [options] FILE\n\na FILE argument containing"
-usage += " timestamps, azimuth, elevation, and range rate"
-usage += " for a satellite pass"
-parser = OptionParser(usage=usage)
+	# Pass File Column Configuration
+	timeCol = 0
+	azCol = 1
+	elCol = 2
+	rateCol = 3
 
-parser.add_option("-s", "--host", dest="host", default="localhost",
-		help="Hostname or IP address for hamlib server")
-parser.add_option("--rot-port", dest="rot_port", default="4533",
-		help="Port number that rotctl is listening on")
-parser.add_option("--rig-port", dest="rig_port", default="4532",
-		help="Port number that rigctl is listening on")
-parser.add_option("--delete", 
-		action="store_true", dest="deleteFlag", default=False,
-		help="Delete the pass file after use")
-parser.add_option("-d", "--downlink", dest="down_freq",
-		help="Downlink frequency in Hz")
-(options, args) = parser.parse_args()
+	### Constants ##############################################################
+	speed_C = 3e8			# m/s.  You better know what this is.
 
-if len(args) == 0:
-	print sys.argv[0] + " must be called with one file name"
-	quit()
+	### Read in pass data ######################################################
+	passFile = open(args[0], 'r')
+	passFile.readline() #discard header
 
-if len(args) > 1:
-	print "Error: too many arguments"
-	quit()
+	timestamps = []
+	azimuth = []
+	elevation = []
+	range_rate = []
+	for line in passFile:
+		waypoint = line.split(' ')
+		timestamps.append(int(waypoint[timeCol]))
+		azimuth.append(float(waypoint[azCol]))
+		elevation.append(float(waypoint[elCol]))
+		range_rate.append(float(waypoint[rateCol].split('\n')[0]))
 
-# Pass File Column Configuration
-timeCol = 0
-azCol = 1
-elCol = 2
-rateCol = 3
+	# Delete old pass file
+	if options.deleteFlag:
+		os.remove(args[0])
+		print "Deleted " + args[0]
 
-### Constants ##############################################################
-speed_C = 3e8			# m/s.  You better know what this is.
+	### Connect to hardware ####################################################
+	BUFFER_SIZE = 256
+	rotator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	rotator.connect((options.host, int(options.rot_port)))
+	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	radio.connect((options.host, int(options.rig_port)))
 
-### Read in pass data ######################################################
-passFile = open(args[0], 'r')
-passFile.readline() #discard header
-
-timestamps = []
-azimuth = []
-elevation = []
-range_rate = []
-for line in passFile:
-	waypoint = line.split(' ')
-	timestamps.append(int(waypoint[timeCol]))
-	azimuth.append(float(waypoint[azCol]))
-	elevation.append(float(waypoint[elCol]))
-	range_rate.append(float(waypoint[rateCol].split('\n')[0]))
-
-# Delete old pass file
-if options.deleteFlag:
-	os.remove(args[0])
-	print "Deleted " + args[0]
-
-### Connect to hardware ####################################################
-BUFFER_SIZE = 256
-rotator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-rotator.connect((options.host, int(options.rot_port)))
-radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-radio.connect((options.host, int(options.rig_port)))
-
-### Loop through pass based on timestamps ##################################
-time_t = time.time()
-
-# Slew antennes before pass starts
-# TODO: adjust the file so that the azimuth tracks below horizon
-if maxAz <= azimuth[0]:
-	rotator.send("P " + str(int(azimuth[0]-360)) + " 000")
-	print "P " + str(int(azimuth[0]-360)) + " 000"
-else:
-	rotator.send("P " + str(int(azimuth[0])) + " 000")
-	print "P " + str(int(azimuth[0])) + " 000"
-
-# Loop through timestamps in pass
-tIndex = 0
-while tIndex < len(timestamps)-1:
-
-	# Fast forward if pass has already started
-	if time_t <- timestamps[tIndex+1]:
-		tIndex+=1
-
-	elif time_t >= timestamps[tIndex]:
-		
-		# Build rotator command string
-		if azimuth[tIndex] <= maxAz:
-			setAz = str(int(azimuth[tIndex]))
-		else:
-			setAZ = str(int(azimuth[tIndex]-360))
-
-		setAz = setAz.zfill(3)
-		setEl = str(int(elevation[tIndex])).zfill(3)
-		rotString = "P " + setAz + ' ' + setEl + "\r"
-
-		#print rotString
-		rotator.send(rotString)
-		
-		# Calculate downlink Doppler and build radio command string
-		if options.down_freq is not None:
-			f_down = (1-range_rate[tIndex]*1000/speed_C)*int(options.down_freq)
-
-			rigString = "F " + str(int(f_down)) + "\r"
-			#print rigString
-			radio.send(rigString)
-
-		# TODO: add offset/repeater frequency
-		# for uplink Doppler correction
-
-		# Increment time
-		tIndex+=1
-	
-	time.sleep(0.5)
+	### Loop through pass based on timestamps ##################################
 	time_t = time.time()
-	#print timestamps[tIndex]
-	#print time_t
 
-# after loop, park antennas
-time.sleep(120)
-if 270 > maxAz:
-	rotator.send("P -090 000")
-else:
-	rotator.send("P 270 000")
-rotator.close()
-radio.close()
+	# Slew antennes before pass starts
+	# TODO: adjust the file so that the azimuth tracks below horizon
+	if maxAz <= azimuth[0]:
+		rotator.send("P " + str(int(azimuth[0]-360)) + " 000")
+		print "P " + str(int(azimuth[0]-360)) + " 000"
+	else:
+		rotator.send("P " + str(int(azimuth[0])) + " 000")
+		print "P " + str(int(azimuth[0])) + " 000"
+
+	# Loop through timestamps in pass
+	tIndex = 0
+	while tIndex < len(timestamps)-1:
+
+		# Fast forward if pass has already started
+		if time_t <- timestamps[tIndex+1]:
+			tIndex+=1
+
+		elif time_t >= timestamps[tIndex]:
+			
+			# Build rotator command string
+			if azimuth[tIndex] <= maxAz:
+				setAz = str(int(azimuth[tIndex]))
+			else:
+				setAZ = str(int(azimuth[tIndex]-360))
+
+			setAz = setAz.zfill(3)
+			setEl = str(int(elevation[tIndex])).zfill(3)
+			rotString = "P " + setAz + ' ' + setEl + "\r"
+
+			#print rotString
+			rotator.send(rotString)
+			
+			# Calculate downlink Doppler and build radio command string
+			if options.down_freq is not None:
+				f_down = (1-range_rate[tIndex]*1000/speed_C)*int(options.down_freq)
+
+				rigString = "F " + str(int(f_down)) + "\r"
+				#print rigString
+				radio.send(rigString)
+
+			# TODO: add offset/repeater frequency
+			# for uplink Doppler correction
+
+			# Increment time
+			tIndex+=1
+		
+		time.sleep(0.5)
+		time_t = time.time()
+		#print timestamps[tIndex]
+		#print time_t
+
+	# after loop, park antennas
+	time.sleep(120)
+	if 270 > maxAz:
+		rotator.send("P -090 000")
+	else:
+		rotator.send("P 270 000")
+	rotator.close()
+	radio.close()
+
+
+# Parse command line arguments
+if __name__ == "__main__":
+	# Set up command line options and arguments
+	usage = "Usage: %prog [options] FILE\n\na FILE argument containing"
+	usage += " timestamps, azimuth, elevation, and range rate"
+	usage += " for a satellite pass"
+	parser = OptionParser(usage=usage)
+
+	parser.add_option("-s", "--host", dest="host", default="localhost",
+			help="Hostname or IP address for hamlib server")
+	parser.add_option("--rot-port", dest="rot_port", default="4533",
+			help="Port number that rotctl is listening on")
+	parser.add_option("--rig-port", dest="rig_port", default="4532",
+			help="Port number that rigctl is listening on")
+	parser.add_option("--delete", 
+			action="store_true", dest="deleteFlag", default=False,
+			help="Delete the pass file after use")
+	parser.add_option("-d", "--downlink", dest="down_freq",
+			help="Downlink frequency in Hz")
+	(options, args) = parser.parse_args()
+
+	if len(args) == 0:
+		print sys.argv[0] + " must be called with one file name"
+		quit()
+
+	if len(args) > 1:
+		print "Error: too many arguments"
+		quit()
+
+	# Call main loop
+	track_pass(options, args)

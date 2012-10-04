@@ -27,90 +27,202 @@
 
 import ConfigParser
 import subprocess
-import os, urllib2, time, calendar
+import os, urllib2, time, calendar, socket
+import config	
 
-### Parameters ########################
-numHours = 24		# interval that this script should be run
-startDelay = 5		# minutes before pass starts
-#configDir = ".config/multitrack"
-configDir = ".config/multitrack"
-#######################################
+def main():
+
+	### Parameters ########################
+	numHours = 24		# interval that this script should be run
+	startDelay = 5		# minutes before pass starts
+	#configDir = ".config/multitrack"
+	#######################################
 
 
-# Check for config file, if it doesn't exist create one from the sample
-configDir = os.getenv("HOME") + "/" + configDir
-if os.path.exists(configDir + "/multitrack.conf"):
-	print "Using config file " + configDir + "/multitrack.conf"
-else:
-	if os.path.exists(configDir + "/multitrack"):
-		print "Copying example config file to " + configDir
-		os.system("cp /usr/local/share/multitrack/multitrack.conf " + configDir)
+	# Check for config file, if it doesn't exist create one from the sample
+	global configDir
+	configDir = os.getenv("HOME") + "/" + config.configDir
+	if os.path.exists(configDir + "/multitrack.conf"):
+		print "Using config file " + configDir + "/multitrack.conf"
 	else:
-		os.system("mkdir " + configDir)
-		print "Copying example config file to " + configDir
-		os.system("cp /usr/local/share/multitrack/multitrack.conf " + configDir)
+		if os.path.exists(configDir + "/multitrack"):
+			print "Copying example config file to " + configDir
+			os.system("cp /usr/local/share/multitrack/multitrack.conf " + configDir)
+		else:
+			os.system("mkdir " + configDir)
+			print "Copying example config file to " + configDir
+			os.system("cp /usr/local/share/multitrack/multitrack.conf " + configDir)
+	
+	# Read in satellites to track
+	conf = ConfigParser.ConfigParser()
+	conf.read(configDir + "/multitrack.conf")
+	print conf.sections()
+	satSet = conf.items("Sats")
+
+	# Pass options data structure
+	class passOptions:
+		def __init__(self):
+		
+			# Hamserv info
+			self.host="localhost"
+			self.rot_port="4533"
+			self.rig_port="4532"
+			
+			# Satellite info
+			self.down_freq="437345000"
+			self.sat=''
+			
+			# Hardware limits
+			self.minAz = float(conf.get("Rotator", "minAz"))
+			self.maxAz = float(conf.get("Rotator", "maxAz"))
+			self.minEl = float(conf.get("Rotator", "minEl"))
+			self.maxEl = float(conf.get("Rotator", "maxEl"))
+			
+			# Miscellaneous
+			self.deleteFlag=False
+
+	# Create Satellite ID arrays
+	sats = []
+	satIDs = []
+	for index in range(0,len(satSet)):
+		pair = satSet[index]
+		sats.append(str.upper(pair[0]))
+		if str.upper(pair[1]) is not "":
+			satIDs.append(str.upper(pair[1]))
+		else:
+			satIDs.append(str.upper(pair[0]))
+
+	# Fetch and parse TLE File
+	os.system("tleupdate -d " + configDir)
+
+	for index in range(0, len(sats)):
+		sat = sats[index]
+		tleMaster = open(configDir + "/" + conf.get("TLE", "tle"), "r")
+		tleSingle = open(configDir + "/" + sat + ".txt", "w")
+
+		while True:
+			line = tleMaster.readline()
+			if line == (satIDs[index] + "\n"):
+				tleSingle.write(line)
+				tleSingle.write(tleMaster.readline())
+				tleSingle.write(tleMaster.readline())
+				break
+			if len(line) == 0:
+				break
+
+		tleSingle.close()
+		tleMaster.close()
 
 
-# Read in satellites to track
-conf = ConfigParser.ConfigParser()
-conf.read(configDir + "/multitrack.conf")
-print conf.sections()
-satSet = conf.items("Sats")
-
-# Create Satellite ID arrays
-sats = []
-satIDs = []
-for index in range(0,len(satSet)):
-	pair = satSet[index]
-	sats.append(str.upper(pair[0]))
-	if str.upper(pair[1]) is not "":
-		satIDs.append(str.upper(pair[1]))
-	else:
-		satIDs.append(str.upper(pair[0]))
-
-# Fetch and parse TLE File
-os.system("tleupdate -d " + configDir)
-
-for index in range(0, len(sats)):
-	sat = sats[index]
-	tleMaster = open(configDir + "/" + conf.get("TLE", "tle"), "r")
-	tleSingle = open(configDir + "/" + sat + ".txt", "w")
+	# Set up time variables
+	time_t = time.time()
+	tlocal = time.asctime()
 
 	while True:
-		line = tleMaster.readline()
-		if line == (satIDs[index] + "\n"):
-			tleSingle.write(line)
-			tleSingle.write(tleMaster.readline())
-			tleSingle.write(tleMaster.readline())
-			break
-		if len(line) == 0:
-			break
+		status = open(configDir + "/status.txt", 'w')
+		status.write("Satellite".ljust(20) + "elevation\n")
+		status.write("=============================\n")
 
-	tleSingle.close()
-	tleMaster.close()
+		# Loop through Satellites
+		for sat in sats:
 
+			# Call pass prediction
+			cmdString =  "satpredict -n"
+			cmdString = cmdString + " -t " + configDir + "/" + sat + ".txt"
+			process = subprocess.Popen(cmdString, shell=True, stdout=subprocess.PIPE)
 
-# Set up time variables
-time_t = time.time()
-tlocal = time.asctime()
+			sat_vector = process.communicate()[0].split(' ')
+			statusString = sat.ljust(20) + sat_vector[2] + '\n'
+			status.write(statusString)
 
-while True:
-	status = open(configDir + "/status.txt", 'w')
-	status.write("Satellite \t\t elevation\n")
+			# If elevation is above -5 degrees, run pass
+			# TODO: Remove magic numbers, put in multitrack.conf!!!
+			if float(sat_vector[2]) > -5:
+				pass_options = passOptions()
+				pass_options.down_freq="437345000"
+				pass_options.sat=sat
+				
+				track_pass(pass_options)
 
-	# Loop through Satellites
-	for sat in sats:
+		status.close()
+		time.sleep(1)
+
+############################################################################
+# track_pass
+############################################################################
+def track_pass(passOptions):
+	
+	### Connect to hardware ################################
+	BUFFER_SIZE = 256
+	rotator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	rotator.connect((passOptions.host, int(passOptions.rot_port)))
+	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	radio.connect((passOptions.host, int(passOptions.rig_port)))
+	
+	while True:
+		status = open(configDir + "/status.txt", 'w')
+		status.write("Tracking " + passOptions.sat + "\n")
+		status.write("=======================================\n")
 
 		# Call pass prediction
 		cmdString =  "satpredict -n"
-		#cmdString = cmdString + " -o " + configDir + "/status.txt"
-		cmdString = cmdString + " -t " + configDir + "/" + sat + ".txt"
-		#print cmdString
+		cmdString = cmdString + " -t " + configDir + "/" + passOptions.sat + ".txt"
 		process = subprocess.Popen(cmdString, shell=True, stdout=subprocess.PIPE)
-
 		sat_vector = process.communicate()[0].split(' ')
-		statusString = sat + '\t\t' + sat_vector[2] + '\n'
-		status.write(statusString)
 
-	status.close()
-	time.sleep(1)
+		range_rate = float(sat_vector[3])
+		f_down = (1-range_rate*1000/config.speed_C)*int(passOptions.down_freq)
+
+		azimuth = float(sat_vector[1])
+		elevation = float(sat_vector[2])
+
+		# Update status file
+		azString = "Azimuth".ljust(15) + str(azimuth) + '\n'
+		elString = "Elevation".ljust(15) + str(elevation) + '\n'
+		dfString = "Downlink".ljust(15) + str(f_down) + '\n'
+		status.write(azString)
+		status.write(elString)
+		status.write(dfString)
+		
+		# Build rotator command string
+		if azimuth <= passOptions.maxAz:
+			setAz = int(azimuth)
+		else:
+			setAz = int(azimuth-360)
+
+		if setAz < 0:
+			setAz = '-' + str(abs(setAz)).zfill(3)
+		else:
+			setAz = str(setAz).zfill(3)
+
+		if elevation < 0:
+			setEl = '000'
+		else:
+			setEl = str(int(elevation)).zfill(3)
+		rotString = "P " + setAz + ' ' + setEl + "\r"
+
+		print rotString
+		rotator.send(rotString)
+		
+		rigString = "F " + str(int(f_down)) + "\r"
+		radio.send(rigString)
+
+		# If elevation is less than -5 degrees, end pass
+		# TODO: Remove magic numbers, put in multitrack.conf!!!
+		if elevation < -5:
+			break
+
+		# Don't overload the hardware!
+		time.sleep(1)
+
+	# after pass, park antennas
+	if 270 > passOptions.maxAz:
+		rotator.send("P -090 000\r")
+	else:
+		rotator.send("P 270 000\r")
+	rotator.close()
+	radio.close()
+
+
+if __name__=="__main__":
+	main()
