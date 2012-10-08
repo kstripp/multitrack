@@ -47,11 +47,12 @@ def main():
 	else:
 		if os.path.exists(configDir + "/multitrack"):
 			print "Copying example config file to " + configDir
-			os.system("cp /usr/local/share/multitrack/multitrack.conf " + configDir)
+			os.system("cp /usr/local/share/multitrack/multitrack.conf "+configDir)
 		else:
 			os.system("mkdir " + configDir)
+			os.system("mkdir " + configDir + "/sats")
 			print "Copying example config file to " + configDir
-			os.system("cp /usr/local/share/multitrack/multitrack.conf " + configDir)
+			os.system("cp /usr/local/share/multitrack/multitrack.conf "+configDir)
 	
 	# Read in satellites to track
 	conf = ConfigParser.ConfigParser()
@@ -93,6 +94,9 @@ def main():
 			satIDs.append(str.upper(pair[0]))
 
 	# Fetch and parse TLE File
+	# TODO: parse into "sat file"
+	# Use config file syntax similar to gpredict satdata
+	# Include TLE, tracking command (run_gs_client.sh), and frequency
 	os.system("tleupdate -d " + configDir)
 
 	for index in range(0, len(sats)):
@@ -201,7 +205,7 @@ def track_pass(passOptions):
 			setEl = str(int(elevation)).zfill(3)
 		rotString = "P " + setAz + ' ' + setEl + "\r"
 
-		print rotString
+		#print rotString
 		rotator.send(rotString)
 		
 		rigString = "F " + str(int(f_down)) + "\r"
@@ -224,5 +228,8 @@ def track_pass(passOptions):
 	radio.close()
 
 
+############################################################################
+# Initialize Multitrack
+############################################################################
 if __name__=="__main__":
 	main()
