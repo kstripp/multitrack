@@ -1,0 +1,30 @@
+Daemon style
+========================================
+* Update multitrack.conf
+[Satellites]
+RAX-2=<command string>
+ --> command string should ideally be a script that accepts start/stop/restart
+ ----> allows for clean startup and shutdown of telemetry collection programs
+ ----> also could do this as a forked process, then kill child when pass is over
+ --> calls $HOME/RAX_Private_GS/run_gs_client.sh (or equivalent)
+
+* daemon mode operation
+
+ loop()
+ 	get_el(all_sats);
+
+	for sat in sats:
+		if el >= -5 deg:
+			run_pass();
+			break;
+
+	sleep(~5 seconds);
+
+* Update $CONFIG_DIR/sats/<satid>.sat
+	** satid can be common name, nickname or NORAD ID
+	** should contain TLE
+		*** Can this be done in plain text at heading?
+		*** If not, then a temp file will be needed to feed the TLE
+		 	into satpredict
+	** should contain names (if characters need modification)
+	** should contain transponder data
