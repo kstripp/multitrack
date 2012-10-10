@@ -1,4 +1,4 @@
-# ProcessTLEs is designed to read in a master TLE file,
+# libTLE is designed to read in a master TLE file,
 # Check/fix the checksums, and split into single TLE files.
 # It may or may not take on more related functionality later.
 

@@ -28,7 +28,8 @@
 import ConfigParser
 import subprocess
 import os, urllib2, time, calendar, socket
-import config	
+import config
+import libTLE
 
 def main():
 
@@ -42,6 +43,7 @@ def main():
 	# Check for config file, if it doesn't exist create one from the sample
 	global configDir
 	configDir = os.getenv("HOME") + "/" + config.configDir
+	satDataDir = configDir + "/sats"
 	if os.path.exists(configDir + "/multitrack.conf"):
 		print "Using config file " + configDir + "/multitrack.conf"
 	else:
@@ -97,12 +99,12 @@ def main():
 	# TODO: parse into "sat file"
 	# Use config file syntax similar to gpredict satdata
 	# Include TLE, tracking command (run_gs_client.sh), and frequency
-	os.system("tleupdate -d " + configDir)
+	os.system("tleupdate -d " + satDataDir)
 
-	for index in range(0, len(sats)):
-		sat = sats[index]
-		tleMaster = open(configDir + "/" + conf.get("TLE", "tle"), "r")
-		tleSingle = open(configDir + "/" + sat + ".txt", "w")
+	tleMaster = open(satDataDir + "/" + conf.get("TLE", "tle"), "r")
+	
+	while True:
+		tleSingle = open(satDataDir + "/" + sat + ".txt", "w")
 
 		while True:
 			line = tleMaster.readline()
