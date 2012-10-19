@@ -1,0 +1,6 @@
+[transponder]
+down_freq=437485000
+up_freq=437625000
+
+[telemetry]
+cmd=''

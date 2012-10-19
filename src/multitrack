@@ -59,6 +59,9 @@ def main():
 			os.system("mkdir " + configDir + "/tle")
 			print "Copying example config file to " + configDir
 			os.system("cp /usr/local/share/multitrack/multitrack.conf "+configDir)
+		
+		os.system("cp /usr/local/share/multitrack/37853.sat "+satDataDir)
+		os.system("cp /usr/local/share/multitrack/37855.sat "+satDataDir)
 	
 	# Read in satellites to track
 	conf = ConfigParser.ConfigParser()
@@ -129,7 +132,6 @@ def main():
 			cmdString =  "satpredict -n"
 			cmdString = cmdString + " -t " + tleDir + "/" + sat + ".txt"
 			process = subprocess.Popen(cmdString, shell=True, stdout=subprocess.PIPE)
-
 			sat_vector = process.communicate()[0].split(' ')
 			statusString = satName.ljust(20) + sat_vector[2] + '\n'
 			status.write(statusString)

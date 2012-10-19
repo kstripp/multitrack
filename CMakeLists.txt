@@ -60,6 +60,8 @@ set (HDRS ${HDRS}
 set (SCRIPTS ${SCRIPTS}
 	src/multitrack
 	src/tleupdate
+	src/libTLE.py
+	src/config.py
 	)
 
 #####################################################################
@@ -67,6 +69,8 @@ set (SCRIPTS ${SCRIPTS}
 #####################################################################
 set (CONFIG ${CONFIG}
 	conf/multitrack.conf
+	conf/sats/37853.sat
+	conf/sats/37855.sat
 	)
 
 #####################################################################
