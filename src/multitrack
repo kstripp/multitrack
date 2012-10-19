@@ -30,6 +30,7 @@ import subprocess
 import os, urllib2, time, calendar, socket
 import config
 import libTLE
+import tempfile
 
 def main():
 
@@ -42,8 +43,10 @@ def main():
 
 	# Check for config file, if it doesn't exist create one from the sample
 	global configDir
+	global tleDir
 	configDir = os.getenv("HOME") + "/" + config.configDir
 	satDataDir = configDir + "/sats"
+	tleDir = configDir + "/tle"
 	if os.path.exists(configDir + "/multitrack.conf"):
 		print "Using config file " + configDir + "/multitrack.conf"
 	else:
@@ -53,6 +56,7 @@ def main():
 		else:
 			os.system("mkdir " + configDir)
 			os.system("mkdir " + configDir + "/sats")
+			os.system("mkdir " + configDir + "/tle")
 			print "Copying example config file to " + configDir
 			os.system("cp /usr/local/share/multitrack/multitrack.conf "+configDir)
 	
@@ -73,7 +77,8 @@ def main():
 			
 			# Satellite info
 			self.down_freq="437345000"
-			self.sat=''
+			self.satNum=''
+			self.satName=''
 			
 			# Hardware limits
 			self.minAz = float(conf.get("Rotator", "minAz"))
@@ -94,31 +99,17 @@ def main():
 			satIDs.append(str.upper(pair[1]))
 		else:
 			satIDs.append(str.upper(pair[0]))
-
+	
 	# Fetch and parse TLE File
 	# TODO: parse into "sat file"
 	# Use config file syntax similar to gpredict satdata
 	# Include TLE, tracking command (run_gs_client.sh), and frequency
-	os.system("tleupdate -d " + satDataDir)
+	os.system("tleupdate -d " + tleDir)
 
-	tleMaster = open(satDataDir + "/" + conf.get("TLE", "tle"), "r")
-	
-	while True:
-		tleSingle = open(satDataDir + "/" + sat + ".txt", "w")
+	libTLE.SplitFile(tleDir + "/" + conf.get("TLE", "tle"), 0, tleDir)
 
-		while True:
-			line = tleMaster.readline()
-			if line == (satIDs[index] + "\n"):
-				tleSingle.write(line)
-				tleSingle.write(tleMaster.readline())
-				tleSingle.write(tleMaster.readline())
-				break
-			if len(line) == 0:
-				break
-
-		tleSingle.close()
-		tleMaster.close()
-
+	# TODO: now that we have all tles parsed into single tle files,
+	# we need the sat file (config parser syntax) to tell us which ones to use.
 
 	# Set up time variables
 	time_t = time.time()
@@ -130,23 +121,31 @@ def main():
 		status.write("=============================\n")
 
 		# Loop through Satellites
-		for sat in sats:
+		for index in range(0, len(satIDs)):
+			sat = satIDs[index]
+			satName = sats[index]
 
 			# Call pass prediction
 			cmdString =  "satpredict -n"
-			cmdString = cmdString + " -t " + configDir + "/" + sat + ".txt"
+			cmdString = cmdString + " -t " + tleDir + "/" + sat + ".txt"
 			process = subprocess.Popen(cmdString, shell=True, stdout=subprocess.PIPE)
 
 			sat_vector = process.communicate()[0].split(' ')
-			statusString = sat.ljust(20) + sat_vector[2] + '\n'
+			statusString = satName.ljust(20) + sat_vector[2] + '\n'
 			status.write(statusString)
 
 			# If elevation is above -5 degrees, run pass
 			# TODO: Remove magic numbers, put in multitrack.conf!!!
 			if float(sat_vector[2]) > -5:
+				
+				# Get satellite config
+				satConf = ConfigParser.ConfigParser()
+				satConf.read(satDataDir + "/" + sat + ".sat")
+				
 				pass_options = passOptions()
-				pass_options.down_freq="437345000"
-				pass_options.sat=sat
+				pass_options.down_freq=satConf.get("transponder", "down_freq")
+				pass_options.satNum=sat
+				pass_options.satName=satName
 				
 				track_pass(pass_options)
 
@@ -164,15 +163,17 @@ def track_pass(passOptions):
 	rotator.connect((passOptions.host, int(passOptions.rot_port)))
 	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	radio.connect((passOptions.host, int(passOptions.rig_port)))
+
+	rotator.send("p\r") # initial querry
 	
 	while True:
 		status = open(configDir + "/status.txt", 'w')
-		status.write("Tracking " + passOptions.sat + "\n")
+		status.write("Tracking " + passOptions.satName + "\n")
 		status.write("=======================================\n")
 
 		# Call pass prediction
 		cmdString =  "satpredict -n"
-		cmdString = cmdString + " -t " + configDir + "/" + passOptions.sat + ".txt"
+		cmdString = cmdString + " -t " + tleDir + "/" + passOptions.satNum + ".txt"
 		process = subprocess.Popen(cmdString, shell=True, stdout=subprocess.PIPE)
 		sat_vector = process.communicate()[0].split(' ')
 
@@ -189,6 +190,11 @@ def track_pass(passOptions):
 		status.write(azString)
 		status.write(elString)
 		status.write(dfString)
+
+		# Read rotator position
+		# FIXME: recv() doesn't work like this
+		rot_pos = rotator.recv(BUFFER_SIZE)
+		status.write("Rotator:".ljust(15) + rot_pos)
 		
 		# Build rotator command string
 		if azimuth <= passOptions.maxAz:
@@ -207,8 +213,10 @@ def track_pass(passOptions):
 			setEl = str(int(elevation)).zfill(3)
 		rotString = "P " + setAz + ' ' + setEl + "\r"
 
-		#print rotString
+		# Command and querry rotator
 		rotator.send(rotString)
+		rotator.send("p\r") #will read on next loop
+
 		
 		rigString = "F " + str(int(f_down)) + "\r"
 		radio.send(rigString)
