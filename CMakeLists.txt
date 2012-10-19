@@ -66,7 +66,7 @@ set (SCRIPTS ${SCRIPTS}
 # Scripts
 #####################################################################
 set (CONFIG ${CONFIG}
-	src/multitrack.conf
+	conf/multitrack.conf
 	)
 
 #####################################################################
