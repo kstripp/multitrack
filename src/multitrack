@@ -166,7 +166,7 @@ def track_pass(passOptions):
 	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	radio.connect((passOptions.host, int(passOptions.rig_port)))
 
-	rotator.send("p\r") # initial querry
+	rotator.send("p\n") # initial querry
 	
 	while True:
 		status = open(configDir + "/status.txt", 'w')
@@ -213,14 +213,14 @@ def track_pass(passOptions):
 			setEl = '000'
 		else:
 			setEl = str(int(elevation)).zfill(3)
-		rotString = "P " + setAz + ' ' + setEl + "\r"
+		rotString = "P " + setAz + ' ' + setEl + "\n"
 
 		# Command and querry rotator
 		rotator.send(rotString)
-		rotator.send("p\r") #will read on next loop
+		rotator.send("p\n") #will read on next loop
 
 		
-		rigString = "F " + str(int(f_down)) + "\r"
+		rigString = "F " + str(int(f_down)) + "\n"
 		radio.send(rigString)
 
 		# If elevation is less than -5 degrees, end pass
@@ -233,9 +233,9 @@ def track_pass(passOptions):
 
 	# after pass, park antennas
 	if 270 > passOptions.maxAz:
-		rotator.send("P -090 000\r")
+		rotator.send("P -090 000\n")
 	else:
-		rotator.send("P 270 000\r")
+		rotator.send("P 270 000\n")
 	rotator.close()
 	radio.close()
 
