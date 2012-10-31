@@ -166,6 +166,13 @@ def track_pass(passOptions):
 	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	radio.connect((passOptions.host, int(passOptions.rig_port)))
 
+	# Detect passes where the antenna has to flip over
+	flipped_flag = detect_flipped_pass(passOptions)
+	if flipped_flag:
+		print "Flipped pass detected"
+	else:
+		print "Normal pass"
+
 	rotator.send("p\n") # initial querry
 	
 	while True:
@@ -238,6 +245,79 @@ def track_pass(passOptions):
 		rotator.send("P 270 000\n")
 	rotator.close()
 	radio.close()
+
+############################################################################
+# detect_flipped_pass
+############################################################################
+
+# Detect passes that cross rotator azimuth limits.  These require the
+# antenna to flip 180 degrees in elevation and then track the reciporical
+# azimuth heading
+
+# Returns 1 if the limit is crossed, otherwise returns 0
+
+def detect_flipped_pass(passOptions):
+	
+	t_index = int(time.time())
+	flipped_flag = 0
+	rot_dir = 2	# cannot be zero, 1 or -1
+
+	# Call pass prediction
+	cmdString =  "satpredict -n"
+	cmdString = cmdString + " -t " + tleDir + "/" + passOptions.satNum +".txt "
+	cmdString = cmdString + " -a " + str(t_index)
+	cmdString = cmdString + " -l " + str(t_index) + " -n"
+	process = subprocess.Popen(cmdString, shell=True, stdout=subprocess.PIPE)
+	sat_vector = process.communicate()[0].split(' ')
+
+	azimuth = float(sat_vector[1])
+	elevation = float(sat_vector[2])
+
+	# Adjust for rotator coordinate system
+	rot_az = azimuth - passOptions.minAz
+
+	t_index += 1
+	
+	while True:
+	
+		# Save last rotator heading and direction
+		rot_az_old = rot_az
+		rot_dir_old = rot_dir
+
+		# Call pass prediction
+		cmdString =  "satpredict -n"
+		cmdString = cmdString + " -t " + tleDir + "/" + passOptions.satNum +".txt "
+		cmdString = cmdString + " -a " + str(t_index)
+		cmdString = cmdString + " -l " + str(t_index) + " -n"
+		process = subprocess.Popen(cmdString, shell=True, stdout=subprocess.PIPE)
+		sat_vector = process.communicate()[0].split(' ')
+
+		azimuth = float(sat_vector[1])
+		elevation = float(sat_vector[2])
+
+		# Adjust for rotator coordinate system
+		rot_az = azimuth - passOptions.minAz
+		
+		if rot_az > 360:
+			rot_az = rot_az - 360
+
+		# Find direction of rotation
+		d_rotaz = rot_az - rot_az_old
+		rot_dir = d_rotaz / abs(d_rotaz)
+
+		if rot_dir == -1 * rot_dir_old:
+			flipped_flag = 1
+			break
+
+		# If elevation is less than -5 degrees, end pass
+		# TODO: Remove magic numbers, put in multitrack.conf!!!
+		if elevation < -5:
+			break
+
+		# Next time step.  High precision is not needed.
+		t_index += 20
+	
+	return flipped_flag
 
 
 ############################################################################
