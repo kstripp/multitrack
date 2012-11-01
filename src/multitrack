@@ -169,9 +169,15 @@ def track_pass(passOptions):
 	# Detect passes where the antenna has to flip over
 	flipped_flag = detect_flipped_pass(passOptions)
 	if flipped_flag:
-		print "Flipped pass detected"
+		print "Keyhole pass detected"
 	else:
 		print "Normal pass"
+	
+	# Not all antennas can go to elevation 180
+	# Pass will encounter keyhole problem, but will be within limits of
+	# the rotator hardware.
+	if passOptions.maxEl >= 180:
+		flipped_flag = 0
 
 	rotator.send("p\n") # initial querry
 	
@@ -199,6 +205,14 @@ def track_pass(passOptions):
 		status.write(azString)
 		status.write(elString)
 		status.write(dfString)
+
+		# Adjust for rotator azimuth limits
+		if flipped_flag:
+			azimuth = azimuth + 180
+			elevation = 180 - elevation
+
+		if azimuth > 360:
+			azimuth = azimuth = 360
 
 		# Read rotator position
 		# FIXME: recv() doesn't work like this
