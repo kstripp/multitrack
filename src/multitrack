@@ -176,7 +176,7 @@ def track_pass(passOptions):
 	# Not all antennas can go to elevation 180
 	# Pass will encounter keyhole problem, but will be within limits of
 	# the rotator hardware.
-	if passOptions.maxEl >= 180:
+	if passOptions.maxEl < 180:
 		flipped_flag = 0
 
 	rotator.send("p\n") # initial querry
@@ -232,6 +232,8 @@ def track_pass(passOptions):
 
 		if elevation < 0:
 			setEl = '000'
+		elif elevation > int(passOptions.maxEl):
+			setEl = str(passOptions.maxEl).zfill(3)
 		else:
 			setEl = str(int(elevation)).zfill(3)
 		rotString = "P " + setAz + ' ' + setEl + "\n"
