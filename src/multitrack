@@ -248,7 +248,7 @@ def track_pass(passOptions):
 
 		# If elevation is less than -5 degrees, end pass
 		# TODO: Remove magic numbers, put in multitrack.conf!!!
-		if elevation < -5:
+		if elevation < -5 or elevation > 185:
 			break
 
 		# Don't overload the hardware!
