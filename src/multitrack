@@ -259,6 +259,17 @@ def track_pass(passOptions):
 		rotator.send("P -090 000\n")
 	else:
 		rotator.send("P 270 000\n")
+	
+	# Because it makes hamlib happy
+	time.sleep(1)
+
+	# Close ports
+	rotator.send("q\n")
+	radio.send("q\n")
+	
+	# Because it makes hamlib happy
+	time.sleep(1)
+
 	rotator.close()
 	radio.close()
 
