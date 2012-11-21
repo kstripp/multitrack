@@ -82,6 +82,7 @@ def main():
 			self.down_freq="437345000"
 			self.satNum=''
 			self.satName=''
+			self.telemCmd=''
 			
 			# Hardware limits
 			self.minAz = float(conf.get("Rotator", "minAz"))
@@ -146,6 +147,7 @@ def main():
 				
 				pass_options = passOptions()
 				pass_options.down_freq=satConf.get("transponder", "down_freq")
+				pass_options.telemCmd=satConf.get("telemetry", "cmd")
 				pass_options.satNum=sat
 				pass_options.satName=satName
 				
@@ -165,6 +167,11 @@ def track_pass(passOptions):
 	rotator.connect((passOptions.host, int(passOptions.rot_port)))
 	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	radio.connect((passOptions.host, int(passOptions.rig_port)))
+
+	### Start Up Telemetry Decoder #########################
+	if passOptions.telemCmd != '':
+		cmdString = passOptions.telemCmd + " start"
+		os.system(cmdString)
 
 	# Detect passes where the antenna has to flip over
 	flipped_flag = detect_flipped_pass(passOptions)
@@ -272,6 +279,11 @@ def track_pass(passOptions):
 
 	rotator.close()
 	radio.close()
+
+	### Stop Telemetry Decoder #############################
+	if passOptions.telemCmd != '':
+		cmdString = passOptions.telemCmd + " stop"
+		os.system(cmdString)
 
 ############################################################################
 # detect_flipped_pass
