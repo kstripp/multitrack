@@ -165,13 +165,6 @@ def main():
 ############################################################################
 def track_pass(passOptions):
 	
-	### Connect to hardware ################################
-	BUFFER_SIZE = 256
-	rotator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	rotator.connect((passOptions.host, int(passOptions.rot_port)))
-	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	radio.connect((passOptions.host, int(passOptions.rig_port)))
-
 	### Start Up Telemetry Decoder #########################
 	if passOptions.telemCmd != '':
 		cmdString = passOptions.telemCmd + " start"
@@ -184,6 +177,13 @@ def track_pass(passOptions):
 	else:
 		print "Normal pass"
 	
+	### Connect to hardware ################################
+	BUFFER_SIZE = 256
+	rotator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	rotator.connect((passOptions.host, int(passOptions.rot_port)))
+	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	radio.connect((passOptions.host, int(passOptions.rig_port)))
+
 	# Not all antennas can go to elevation 180
 	# Pass will encounter keyhole problem, but will be within limits of
 	# the rotator hardware.
