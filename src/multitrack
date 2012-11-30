@@ -277,8 +277,17 @@ def track_pass(passOptions):
 	# Because it makes hamlib happy
 	time.sleep(1)
 
-	rotator.close()
-	radio.close()
+	try:
+		rotator.close()
+		break
+	except:
+		print "rotator socket already seems to be closed"
+
+	try:
+		radio.close()
+		break
+	except:
+		print "radio socket already seems to be closed"
 
 	### Stop Telemetry Decoder #############################
 	if passOptions.telemCmd != '':
