@@ -279,13 +279,11 @@ def track_pass(passOptions):
 
 	try:
 		rotator.close()
-		break
 	except:
 		print "rotator socket already seems to be closed"
 
 	try:
 		radio.close()
-		break
 	except:
 		print "radio socket already seems to be closed"
 
