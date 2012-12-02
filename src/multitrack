@@ -32,7 +32,35 @@ import config
 import libTLE
 import tempfile
 
+############################################################################
+# Pass options data structure
+############################################################################
+class passOptions:
+	def __init__(self, conf):
+	
+		# Hamserv info
+		self.host="localhost"
+		self.rot_port="4533"
+		self.rig_port="4532"
+		
+		# Satellite info
+		self.down_freq="437345000"
+		self.satNum=''
+		self.satName=''
+		self.telemCmd=''
+		
+		# Hardware limits
+		self.minAz = float(conf.get("Rotator", "minAz"))
+		self.maxAz = float(conf.get("Rotator", "maxAz"))
+		self.minEl = float(conf.get("Rotator", "minEl"))
+		self.maxEl = float(conf.get("Rotator", "maxEl"))
+		
+		# Miscellaneous
+		self.deleteFlag=False
+
+############################################################################
 def main():
+############################################################################
 
 	### Parameters ########################
 	numHours = 24		# interval that this script should be run
@@ -68,30 +96,6 @@ def main():
 	conf.read(configDir + "/multitrack.conf")
 	print conf.sections()
 	satSet = conf.items("Sats")
-
-	# Pass options data structure
-	class passOptions:
-		def __init__(self):
-		
-			# Hamserv info
-			self.host="localhost"
-			self.rot_port="4533"
-			self.rig_port="4532"
-			
-			# Satellite info
-			self.down_freq="437345000"
-			self.satNum=''
-			self.satName=''
-			self.telemCmd=''
-			
-			# Hardware limits
-			self.minAz = float(conf.get("Rotator", "minAz"))
-			self.maxAz = float(conf.get("Rotator", "maxAz"))
-			self.minEl = float(conf.get("Rotator", "minEl"))
-			self.maxEl = float(conf.get("Rotator", "maxEl"))
-			
-			# Miscellaneous
-			self.deleteFlag=False
 
 	# Create Satellite ID arrays
 	sats = []
@@ -145,7 +149,7 @@ def main():
 				satConf = ConfigParser.ConfigParser()
 				satConf.read(satDataDir + "/" + sat + ".sat")
 				
-				pass_options = passOptions()
+				pass_options = passOptions(conf)
 				pass_options.down_freq=satConf.get("transponder", "down_freq")
 				pass_options.telemCmd=satConf.get("telemetry", "cmd")
 				pass_options.satNum=sat
