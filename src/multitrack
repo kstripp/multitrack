@@ -40,8 +40,8 @@ class passOptions:
 	
 		# Hamserv info
 		self.host="localhost"
-		self.rot_port="4533"
-		self.rig_port="4532"
+		self.rot_port=conf.get("Radio", "port")
+		self.rig_port=conf.get("Rotator", "port")
 		
 		# Satellite info
 		self.down_freq="437345000"
