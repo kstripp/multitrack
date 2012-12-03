@@ -40,8 +40,8 @@ class passOptions:
 	
 		# Hamserv info
 		self.host="localhost"
-		self.rot_port=conf.get("Radio", "port")
-		self.rig_port=conf.get("Rotator", "port")
+		self.rot_port=conf.get("Rotator", "port")
+		self.rig_port=conf.get("Radio", "port")
 		
 		# Satellite info
 		self.down_freq="437345000"
@@ -169,6 +169,9 @@ def track_pass(passOptions):
 	if passOptions.telemCmd != '':
 		cmdString = passOptions.telemCmd + " start"
 		os.system(cmdString)
+
+		# Wait for programs to initialize
+		time.sleep(1)
 
 	# Detect passes where the antenna has to flip over
 	flipped_flag = detect_flipped_pass(passOptions)
