@@ -167,11 +167,12 @@ def track_pass(passOptions):
 	
 	### Start Up Telemetry Decoder #########################
 	if passOptions.telemCmd != '':
+		print "Starting telemetry decoder"
 		cmdString = passOptions.telemCmd + " start"
 		os.system(cmdString)
 
 		# Wait for programs to initialize
-		time.sleep(1)
+		time.sleep(2)
 
 	# Detect passes where the antenna has to flip over
 	flipped_flag = detect_flipped_pass(passOptions)
@@ -182,8 +183,10 @@ def track_pass(passOptions):
 	
 	### Connect to hardware ################################
 	BUFFER_SIZE = 256
+	print "Initializing rotator socket"
 	rotator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	rotator.connect((passOptions.host, int(passOptions.rot_port)))
+	print "Initializing rotator socket"
 	radio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	radio.connect((passOptions.host, int(passOptions.rig_port)))
 
