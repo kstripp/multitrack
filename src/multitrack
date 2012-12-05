@@ -229,7 +229,7 @@ def track_pass(passOptions):
 			elevation = 180 - elevation
 
 		if azimuth > 360:
-			azimuth = azimuth = 360
+			azimuth = azimuth - 360
 
 		# Read rotator position
 		# FIXME: recv() doesn't work like this
