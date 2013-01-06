@@ -31,6 +31,7 @@ import os, urllib2, time, calendar, socket
 import config
 import libTLE
 import tempfile
+import threading
 
 ############################################################################
 # Pass options data structure
@@ -107,6 +108,11 @@ def main():
 			satIDs.append(str.upper(pair[1]))
 		else:
 			satIDs.append(str.upper(pair[0]))
+
+	# List to track which sats have an active pass thread
+	pass_threads = []
+	for sat in satIDs:
+		pass_threads.append(0)
 	
 	# Fetch and parse TLE File
 	# TODO: parse into "sat file"
@@ -122,6 +128,13 @@ def main():
 	# Set up time variables
 	time_t = time.time()
 	tlocal = time.asctime()
+
+	# Hardware semaphore
+	# TODO: turning this into a priority queue may make multiple 
+	# ground stations straight forward. If the queue is empty, there 
+	# are no available stations.  Otherwise, take the best available
+	sem_gs = threading.BoundedSemaphore(value=1)
+	sem_status = threading.BoundedSemaphore(value=1)
 
 	while True:
 		status = open(configDir + "/status.txt", 'w')
@@ -143,7 +156,7 @@ def main():
 
 			# If elevation is above -5 degrees, run pass
 			# TODO: Remove magic numbers, put in multitrack.conf!!!
-			if float(sat_vector[2]) > -5:
+			if float(sat_vector[2]) > -5 and pass_threads[index] == 0:
 				
 				# Get satellite config
 				satConf = ConfigParser.ConfigParser()
@@ -155,7 +168,12 @@ def main():
 				pass_options.satNum=sat
 				pass_options.satName=satName
 				
-				track_pass(pass_options)
+				t = threading.Thread(target=track_pass, args=(pass_options,sem_gs))
+				t.start()
+				pass_threads[index] = 1
+			
+			elif float(sat_vector[2]) < -5 and pass_threads[index] == 1:
+				pass_threads[index] = 0
 
 		status.close()
 		time.sleep(1)
@@ -163,8 +181,12 @@ def main():
 ############################################################################
 # track_pass
 ############################################################################
-def track_pass(passOptions):
+def track_pass(passOptions, sem_gs):
 	
+	sem_gs.acquire()
+
+	print "new pass thread!"
+
 	### Start Up Telemetry Decoder #########################
 	if passOptions.telemCmd != '':
 		print "Starting telemetry decoder"
@@ -199,6 +221,11 @@ def track_pass(passOptions):
 	rotator.send("p\n") # initial querry
 	
 	while True:
+
+		#FIXME: with the new threading system, there is a conflict between
+		# pass generated status updates and main status updates.
+		# It is probably best that only main generates updates.
+
 		status = open(configDir + "/status.txt", 'w')
 		status.write("Tracking " + passOptions.satName + "\n")
 		status.write("=======================================\n")
@@ -296,6 +323,8 @@ def track_pass(passOptions):
 		radio.close()
 	except:
 		print "radio socket already seems to be closed"
+
+	sem_gs.release()
 
 	### Stop Telemetry Decoder #############################
 	if passOptions.telemCmd != '':
