@@ -114,17 +114,6 @@ def main():
 	for sat in satIDs:
 		pass_threads.append(0)
 	
-	# Fetch and parse TLE File
-	# TODO: parse into "sat file"
-	# Use config file syntax similar to gpredict satdata
-	# Include TLE, tracking command (run_gs_client.sh), and frequency
-	os.system("tleupdate -d " + tleDir)
-
-	libTLE.SplitFile(tleDir + "/" + conf.get("TLE", "tle"), 0, tleDir)
-
-	# TODO: now that we have all tles parsed into single tle files,
-	# we need the sat file (config parser syntax) to tell us which ones to use.
-
 	# Set up time variables
 	time_t = time.time()
 	tlocal = time.asctime()
@@ -137,6 +126,13 @@ def main():
 	sem_status = threading.BoundedSemaphore(value=1)
 
 	while True:
+
+		# Update TLE
+		libTLE.update(tleDir, conf)
+		# TODO: now that we have all tles parsed into single tle files,
+		# we need the sat file (config parser syntax) to tell us which ones to use.
+
+
 		status = open(configDir + "/status.txt", 'w')
 		status.write("Satellite".ljust(20) + "elevation\n")
 		status.write("=============================\n")
