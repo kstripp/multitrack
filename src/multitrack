@@ -111,8 +111,14 @@ def main():
 
 	# List to track which sats have an active pass thread
 	pass_threads = []
+	stop_events = []
+	priorities = []
 	for sat in satIDs:
 		pass_threads.append(0)
+		stop_events.append(threading.Event())
+		priorities.append(10000)
+		# someday, somebody is going to be mad at me for hard
+		# coding a "limit" of 10000 priorities :-P
 	
 	# Set up time variables
 	time_t = time.time()
@@ -164,10 +170,17 @@ def main():
 				pass_options.satNum=sat
 				pass_options.satName=satName
 				
-				t = threading.Thread(target=track_pass, args=(pass_options,sem_gs))
+				# Clear stop events
+				stop_events[index].clear()
+
+				# Create and start thread
+				t = threading.Thread(target=track_pass, args=(pass_options,sem_gs,stop_events[index]))
 				t.start()
 				pass_threads[index] = 1
-			
+				priorities[index] = int(satConf.get("general", "priority"))
+
+				check_priority(pass_threads, index, stop_events, priorities)
+
 			elif float(sat_vector[2]) < -5 and pass_threads[index] == 1:
 				pass_threads[index] = 0
 
@@ -175,9 +188,28 @@ def main():
 		time.sleep(1)
 
 ############################################################################
+# check_priority
+############################################################################
+def check_priority(pass_threads, pass_index, stop_events, priorities):
+
+	print "checking priorities!"
+	print priorities[pass_index]
+
+	for index in range(len(pass_threads)):
+	
+		print priorities[index]
+
+		# lower number is higher priority
+		if priorities[pass_index] < priorities[index] and pass_threads[index] > 0:
+			stop_events[index].set()
+
+			print "sending stop event"
+
+
+############################################################################
 # track_pass
 ############################################################################
-def track_pass(passOptions, sem_gs):
+def track_pass(passOptions, sem_gs, stop_event):
 	
 	sem_gs.acquire()
 
@@ -216,7 +248,7 @@ def track_pass(passOptions, sem_gs):
 
 	rotator.send("p\n") # initial querry
 	
-	while True:
+	while (not stop_event.is_set()):
 
 		#FIXME: with the new threading system, there is a conflict between
 		# pass generated status updates and main status updates.
