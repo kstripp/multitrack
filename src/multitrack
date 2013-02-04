@@ -352,12 +352,12 @@ def track_pass(passOptions, sem_gs, stop_event):
 	except:
 		print "radio socket already seems to be closed"
 
-	sem_gs.release()
-
 	### Stop Telemetry Decoder #############################
 	if passOptions.telemCmd != '':
 		cmdString = passOptions.telemCmd + " stop"
 		os.system(cmdString)
+	
+	sem_gs.release()
 
 ############################################################################
 # detect_flipped_pass
