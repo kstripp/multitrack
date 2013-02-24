@@ -1,3 +1,7 @@
+[general]
+name="RAX-2"
+priority=1
+
 [transponder]
 down_freq=437345000
 up_freq=437505000
